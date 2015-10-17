@@ -37,6 +37,7 @@ import java.lang.annotation.Target;
  */
 @Target(value = {ElementType.TYPE, ElementType.PACKAGE, ElementType.FIELD, ElementType.LOCAL_VARIABLE})
 @Retention(value = RetentionPolicy.SOURCE)
+@Deprecated
 public @interface CStructs {
 
     /**

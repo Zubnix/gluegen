@@ -278,7 +278,8 @@ public class CStructAnnotationProcessor extends AbstractProcessor {
     public static class AnnotationProcessorJavaStructEmitter extends JavaEmitter {
 
         @Override
-        protected PrintWriter openFile(final String filename, final String simpleClassName) throws IOException {
+        protected PrintWriter openFile(final String filename,
+                                       final String simpleClassName) throws IOException {
 
             if( generatedStructs.contains(simpleClassName) ) {
                 System.err.println("skipping -> " + simpleClassName);
