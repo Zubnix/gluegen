@@ -103,24 +103,13 @@ public class GlueGen implements GlueEmitterControls {
     /** GlueGen's build in macro name {@value}, when compiling w/ GlueGen. */
     public static final String __GLUEGEN__ = "__GLUEGEN__";
 
-    @SuppressWarnings("unchecked")
-    public void run(final Reader reader, final String filename, final Class<?> emitterClass, final List<String> includePaths, final List<String> cfgFiles, final String outputRootDir, final boolean copyCPPOutput2Stderr) {
+    public void run(final Reader reader, final String filename, final GlueEmitter emit, final List<String> includePaths, final List<String> cfgFiles, final String outputRootDir, final boolean copyCPPOutput2Stderr) {
 
         try {
             if(debug) {
                 Logging.getLogger().setLevel(Level.ALL);
             } else if( null != logLevel ) {
                 Logging.getLogger().setLevel(logLevel);
-            }
-            final GlueEmitter emit;
-            if (emitterClass == null) {
-                emit = new JavaEmitter();
-            } else {
-                try {
-                    emit = (GlueEmitter) emitterClass.newInstance();
-                } catch (final Exception e) {
-                    throw new RuntimeException("Exception occurred while instantiating emitter class.", e);
-                }
             }
 
             for (final String config : cfgFiles) {
@@ -187,11 +176,11 @@ public class GlueGen implements GlueEmitterControls {
             inStream.close();
 
             /**
-            // For debugging: Dump type dictionary and struct dictionary to System.err
-            if(debug) {
-                td.dumpDictionary(err, "All Types");
-                sd.dumpDictionary(err, "All Structs");
-            } */
+             // For debugging: Dump type dictionary and struct dictionary to System.err
+             if(debug) {
+             td.dumpDictionary(err, "All Types");
+             sd.dumpDictionary(err, "All Structs");
+             } */
 
             // At this point we have all of the pieces we need in order to
             // generate glue code: the #defines to constants, the set of
@@ -360,6 +349,21 @@ public class GlueGen implements GlueEmitterControls {
         } catch (final Exception e) {
             throw new RuntimeException("Exception occurred while generating glue code.", e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void run(final Reader reader, final String filename, final Class<?> emitterClass, final List<String> includePaths, final List<String> cfgFiles, final String outputRootDir, final boolean copyCPPOutput2Stderr) {
+        final GlueEmitter emit;
+        if (emitterClass == null) {
+            emit = new JavaEmitter();
+        } else {
+            try {
+                emit = (GlueEmitter) emitterClass.newInstance();
+            } catch (final Exception e) {
+                throw new RuntimeException("Exception occurred while instantiating emitter class.", e);
+            }
+        }
+        run(reader,filename,emit,includePaths,cfgFiles,outputRootDir,copyCPPOutput2Stderr);
     }
 
     public static void main(final String... args) {
