@@ -1,16 +1,16 @@
 /**
  * Copyright 2015 JogAmp Community. All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
- *
- *    1. Redistributions of source code must retain the above copyright notice, this list of
- *       conditions and the following disclaimer.
- *
- *    2. Redistributions in binary form must reproduce the above copyright notice, this list
- *       of conditions and the following disclaimer in the documentation and/or other materials
- *       provided with the distribution.
- *
+ * <p>
+ * 1. Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
+ * <p>
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or other materials
+ * provided with the distribution.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY JogAmp Community ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JogAmp Community OR
@@ -20,7 +20,7 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * The views and conclusions contained in the software and documentation are those of the
  * authors and should not be interpreted as representing official policies, either expressed
  * or implied, of JogAmp Community.
@@ -57,25 +57,21 @@ public @interface GlueGen {
     String[] includePaths() default {};
 
     /**
-     *  (optional) uses emitterClass as the emitter class which will be used by GlueGen
-     *  to generate the glue code. The emitter class must implement the com.sun.gluegen.GlueEmitter interface. If this
-     *  option is not specified, a com.sun.gluegen.JavaEmitter will be used by default.
+     * (optional) adds cfgFile to the list of configuration files used to set up the chosen emitter. This is the means
+     * by which a large number of options are passed in to the GlueGen tool and to the emitter in particular. Cfg files
+     * must be in the same package as which this annotation was placed on.
+     *
      * @return
      */
-    Class<? extends GlueEmitter> emitterClass() default JavaEmitter.class;
-
-    /**
-     * adds cfgFile to the list of configuration files used to set up the chosen emitter. This is the means by which a
-     * large number of options are passed in to the GlueGen tool and to the emitter in particular.
-     * @return
-     */
-    String[] cfgFiles() default "";
+    String[] cfgFiles() default {};
 
     /**
      * selects the file from which GlueGen should read the C header file for which glue code should be generated.
-     * This must be the last command-line argument, and only one filename argument is supported. To cause multiple
-     * header files to be parsed, write a small .c file #including the multiple headers and point GlueGen at the .c file.
+     * Only one filename argument is supported. To cause multiple header files to be parsed, write a small .c file
+     * #including the multiple headers and point GlueGen at the .c file.</p> file must be in the same package as which
+     * this annotation was placed on.
+     *
      * @return
      */
-    String fileName();
+    String header();
 }
