@@ -1,4 +1,4 @@
-package com.jogamp.gluegen.processor;
+package com.jogamp.gluegen.annotation;
 
 
 import com.jogamp.gluegen.GlueEmitter;

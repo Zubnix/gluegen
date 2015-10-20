@@ -140,7 +140,7 @@
         </javac>
 
         <!-- Annotation Processor - Second -->
-        <mkdir dir="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/processor"/>
+        <mkdir dir="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/annotation"/>
         <javac destdir="${build_t.java}" 
                fork="yes"
                includeAntRuntime="false"
@@ -152,10 +152,10 @@
                debug="${javacdebug}" debuglevel="${javacdebuglevel}">
             <classpath refid="junit.compile.classpath"/>
             <compilerarg value="-proc:only"/>
-            <!-- compilerarg value="-J-Djogamp.gluegen.processor.debug"/ -->
-            <compilerarg value="-J-Djogamp.gluegen.processor.output=${build_t.gen}/classes"/>
-            <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/processor"/>
-            <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/processor" />
+            <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
+            <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/annotation"/>
+            <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/annotation" />
         </javac>
 
         <!-- Javac All - Third -->

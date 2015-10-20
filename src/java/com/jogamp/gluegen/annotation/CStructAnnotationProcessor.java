@@ -25,13 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.jogamp.gluegen.processor;
+package com.jogamp.gluegen.annotation;
 
 import com.jogamp.common.util.PropertyAccess;
 import com.jogamp.gluegen.GlueGen;
 import com.jogamp.gluegen.JavaEmitter;
-import com.jogamp.gluegen.annotation.CStruct;
-import com.jogamp.gluegen.annotation.CStructs;
 import jogamp.common.Debug;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -65,21 +63,21 @@ import java.util.Set;
  * <p>
  * If the <i>header file</i> is absolute, the <i>root path</i> is the parent folder of the folder containing the package source, i.e.:
  * <pre>
- *  Header: /gluegen/src/junit/com/jogamp/test/processor/TestStruct01.h
+ *  Header: /gluegen/src/junit/com/jogamp/test/annotation/TestStruct01.h
  *  Root:   /gluegen/src/junit/..
  *  Root:   /gluegen/src
  * </pre>
  * Otherwise the <i>user.dir</i> is being used as the <i>root path</i>
  * and the relative <i>header file</i> is appended to it.
  * </p>
- * The property <code>jogamp.gluegen.processor.output</code> allows setting a default <i>outputPath</i>
- * for the generated sources, if the {@link ProcessingEnvironment}'s <code>processor.output</code> option is not set.
+ * The property <code>jogamp.gluegen.annotation.output</code> allows setting a default <i>outputPath</i>
+ * for the generated sources, if the {@link ProcessingEnvironment}'s <code>annotation.output</code> option is not set.
  * <p>
  * If the <i>outputPath</i> is relative, it is appended to the <i>root path</i>,
  * otherwise it is taken as-is.
  * </p>
  * <p>
- * User can enable DEBUG while defining property <code>jogamp.gluegen.processor.debug</code>.
+ * User can enable DEBUG while defining property <code>jogamp.gluegen.annotation.debug</code>.
  * </p>
  *
  * @author Michael Bien, et al.
@@ -92,10 +90,10 @@ public class CStructAnnotationProcessor extends AbstractProcessor {
 
     static {
         Debug.initSingleton();
-        DEBUG = PropertyAccess.isPropertyDefined("jogamp.gluegen.processor.debug", true);
+        DEBUG = PropertyAccess.isPropertyDefined("jogamp.gluegen.annotation.debug", true);
     }
 
-    private static final String STRUCTGENOUTPUT_OPTION = "processor.output";
+    private static final String STRUCTGENOUTPUT_OPTION = "annotation.output";
     private static final String STRUCTGENOUTPUT = PropertyAccess.getProperty("jogamp.gluegen."+STRUCTGENOUTPUT_OPTION, true, "gensrc");
 
     private Filer filer;

@@ -248,7 +248,7 @@ public class ElfHeaderPart2 {
 
     public final short getSize() { return raw.getE_ehsize(); }
 
-    /** Returns the processor-specific flags associated with the file. */
+    /** Returns the annotation-specific flags associated with the file. */
     public final int getFlags() {
         return raw.getE_flags();
     }

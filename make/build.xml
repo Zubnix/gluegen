@@ -765,8 +765,8 @@
     <!-- Build gluegen.jar. -->
     <jar destfile="${build}/gluegen.jar" manifest="${build}/Manifest.temp" filesonly="true">
       <service type="javax.annotation.processing.Processor">
-        <provider classname="com.jogamp.gluegen.processor.CStructAnnotationProcessor"/>
-        <provider classname="com.jogamp.gluegen.processor.GlueGenAnnotationProcessor"/>
+        <provider classname="com.jogamp.gluegen.annotation.CStructAnnotationProcessor"/>
+        <provider classname="com.jogamp.gluegen.annotation.GlueGenAnnotationProcessor"/>
       </service>
       <fileset dir="${classes}">
         <include name="**/*.class" />

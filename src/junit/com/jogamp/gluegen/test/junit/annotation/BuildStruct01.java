@@ -1,4 +1,4 @@
-package com.jogamp.gluegen.test.junit.processor;
+package com.jogamp.gluegen.test.junit.annotation;
 
 import com.jogamp.gluegen.annotation.CStruct;
 
