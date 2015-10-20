@@ -1,4 +1,4 @@
-package com.jogamp.gluegen.test.junit.structgen;
+package com.jogamp.gluegen.test.junit.processor;
 
 import com.jogamp.junit.util.SingletonJunitCase;
 

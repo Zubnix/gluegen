@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.jogamp.gluegen.structgen;
+package com.jogamp.gluegen.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

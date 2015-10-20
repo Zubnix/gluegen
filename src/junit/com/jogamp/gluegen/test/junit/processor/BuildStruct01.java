@@ -1,6 +1,6 @@
-package com.jogamp.gluegen.test.junit.structgen;
+package com.jogamp.gluegen.test.junit.processor;
 
-import com.jogamp.gluegen.structgen.CStruct;
+import com.jogamp.gluegen.annotation.CStruct;
 
 /**
  * Class simply triggering CStruct annotation processor to generate the types 'RenderingConfig' etc.

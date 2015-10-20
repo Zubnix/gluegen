@@ -25,24 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.jogamp.gluegen.structgen;
+package com.jogamp.gluegen.processor;
 
 import com.jogamp.common.util.PropertyAccess;
 import com.jogamp.gluegen.GlueGen;
 import com.jogamp.gluegen.JavaEmitter;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.jogamp.gluegen.annotation.CStruct;
+import com.jogamp.gluegen.annotation.CStructs;
+import jogamp.common.Debug;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -58,33 +48,43 @@ import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-
-import jogamp.common.Debug;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
  * If the <i>header file</i> is absolute, the <i>root path</i> is the parent folder of the folder containing the package source, i.e.:
  * <pre>
- *  Header: /gluegen/src/junit/com/jogamp/test/structgen/TestStruct01.h
+ *  Header: /gluegen/src/junit/com/jogamp/test/processor/TestStruct01.h
  *  Root:   /gluegen/src/junit/..
  *  Root:   /gluegen/src
  * </pre>
  * Otherwise the <i>user.dir</i> is being used as the <i>root path</i>
  * and the relative <i>header file</i> is appended to it.
  * </p>
- * The property <code>jogamp.gluegen.structgen.output</code> allows setting a default <i>outputPath</i>
- * for the generated sources, if the {@link ProcessingEnvironment}'s <code>structgen.output</code> option is not set.
+ * The property <code>jogamp.gluegen.processor.output</code> allows setting a default <i>outputPath</i>
+ * for the generated sources, if the {@link ProcessingEnvironment}'s <code>processor.output</code> option is not set.
  * <p>
  * If the <i>outputPath</i> is relative, it is appended to the <i>root path</i>,
  * otherwise it is taken as-is.
  * </p>
  * <p>
- * User can enable DEBUG while defining property <code>jogamp.gluegen.structgen.debug</code>.
+ * User can enable DEBUG while defining property <code>jogamp.gluegen.processor.debug</code>.
  * </p>
  *
  * @author Michael Bien, et al.
  */
-@SupportedAnnotationTypes(value = {"com.jogamp.gluegen.structgen.CStruct", "com.jogamp.gluegen.structgen.CStructs"})
+@SupportedAnnotationTypes(value = {"com.jogamp.gluegen.annotation.CStruct", "com.jogamp.gluegen.annotation.CStructs"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class CStructAnnotationProcessor extends AbstractProcessor {
     private static final String DEFAULT = "_default_";
@@ -92,10 +92,10 @@ public class CStructAnnotationProcessor extends AbstractProcessor {
 
     static {
         Debug.initSingleton();
-        DEBUG = PropertyAccess.isPropertyDefined("jogamp.gluegen.structgen.debug", true);
+        DEBUG = PropertyAccess.isPropertyDefined("jogamp.gluegen.processor.debug", true);
     }
 
-    private static final String STRUCTGENOUTPUT_OPTION = "structgen.output";
+    private static final String STRUCTGENOUTPUT_OPTION = "processor.output";
     private static final String STRUCTGENOUTPUT = PropertyAccess.getProperty("jogamp.gluegen."+STRUCTGENOUTPUT_OPTION, true, "gensrc");
 
     private Filer filer;
