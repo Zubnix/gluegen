@@ -1,4 +1,4 @@
-package com.jogamp.gluegen.test.junit.annotation;
+package com.jogamp.gluegen.test.junit.generation.annotation;
 
 import com.jogamp.junit.util.SingletonJunitCase;
 

@@ -8,7 +8,7 @@
  * @see BuildStruct01
  */
 @CStructs({@CStruct(name="RenderingConfig", header="TestStruct01.h"), @CStruct(name="Pixel", header="TestStruct02.h")})
-package com.jogamp.gluegen.test.junit.annotation;
+package com.jogamp.gluegen.test.junit.generation.annotation;
 
 import com.jogamp.gluegen.annotation.CStructs;
 import com.jogamp.gluegen.annotation.CStruct;
