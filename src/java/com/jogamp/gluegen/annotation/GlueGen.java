@@ -29,9 +29,6 @@
 package com.jogamp.gluegen.annotation;
 
 
-import com.jogamp.gluegen.GlueEmitter;
-import com.jogamp.gluegen.JavaEmitter;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -51,6 +48,9 @@ public @interface GlueGen {
      * locate header files it encounters in #include directives. Unlike most C preprocessors, however, GlueGen has no
      * default include path, so it is typically necessary to supply at least one option in order
      * to handle any #include directives in the file being parsed.
+     * <p>
+     * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.includePaths.<package>=<comma separated absolute include paths>}
+     * compiler flag
      *
      * @return
      */
@@ -60,6 +60,9 @@ public @interface GlueGen {
      * (optional) adds cfgFile to the list of configuration files used to set up the chosen emitter. This is the means
      * by which a large number of options are passed in to the GlueGen tool and to the emitter in particular. Cfg files
      * must be in the same package as which this annotation was placed on.
+     * <p>
+     * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.cfgFiles.<package>=<comma separated absolute cfg paths>}
+     * compiler flag
      *
      * @return
      */
@@ -70,8 +73,21 @@ public @interface GlueGen {
      * Only one filename argument is supported. To cause multiple header files to be parsed, write a small .c file
      * #including the multiple headers and point GlueGen at the .c file.</p> file must be in the same package as which
      * this annotation was placed on.
+     * <p>
+     * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.header.<package>=<absolute header path>}
+     * compiler flag
      *
      * @return
      */
     String header();
+
+    /**
+     * (optional) specify the desired java source output. Default is the package on which this annotation is placed.
+     * <p>
+     * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.output.<package>=<absolute output path>}
+     * compiler flag.
+     *
+     * @return
+     */
+    String output() default "";
 }
