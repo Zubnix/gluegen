@@ -1,16 +1,16 @@
 /**
  * Copyright 2015 JogAmp Community. All rights reserved.
- * <p>
+ * <p/>
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
- * <p>
+ * <p/>
  * 1. Redistributions of source code must retain the above copyright notice, this list of
  * conditions and the following disclaimer.
- * <p>
+ * <p/>
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list
  * of conditions and the following disclaimer in the documentation and/or other materials
  * provided with the distribution.
- * <p>
+ * <p/>
  * THIS SOFTWARE IS PROVIDED BY JogAmp Community ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JogAmp Community OR
@@ -20,7 +20,7 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * <p>
+ * <p/>
  * The views and conclusions contained in the software and documentation are those of the
  * authors and should not be interpreted as representing official policies, either expressed
  * or implied, of JogAmp Community.
@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import static java.lang.System.getProperty;
 
@@ -71,7 +72,12 @@ import static java.lang.System.getProperty;
  */
 public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
-    static final boolean DEBUG;
+    private static final boolean DEBUG;
+
+    private static final String INCLUDE_PATHS = "jogamp.gluegen.annotation.includePaths.";
+    private static final String CFG_FILES     = "jogamp.gluegen.annotation.cfgFiles.";
+    private static final String HEADER        = "jogamp.gluegen.annotation.header.";
+    private static final String OUTPUT        = "jogamp.gluegen.annotation.output.";
 
     static {
         Debug.initSingleton();
@@ -143,36 +149,87 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         final String packageName = packageElement.getQualifiedName()
                                                  .toString();
 
-        final String[]     cfgFilesProperty = glueGen.cfgFiles();
-        final List<String> cfgFiles         = new ArrayList<String>();
+        final String includePathsFlag = PropertyAccess.getProperty(INCLUDE_PATHS + packageName,
+                                                                   false);
+        final boolean overruleIncludePaths = includePathsFlag != null;
 
-        for (String cfgFileProperty : cfgFilesProperty) {
-            final File cfgFile = locateSource(packageName,
-                                              cfgFileProperty);
-            cfgFiles.add(cfgFile.getAbsolutePath());
+        final String cfgFilesFlag = PropertyAccess.getProperty(CFG_FILES + packageName,
+                                                               false);
+        final boolean overruleCfgFiles = cfgFilesFlag != null;
+
+        final String headerFlag = PropertyAccess.getProperty(HEADER + packageName,
+                                                             false);
+        final boolean overruleHeader = headerFlag != null;
+
+        final String outputFlag = PropertyAccess.getProperty(OUTPUT + packageName,
+                                                             false);
+        final boolean overruleOutput = outputFlag != null;
+
+
+        final List<String> cfgFiles = new ArrayList<String>();
+        if (overruleCfgFiles) {
+            final StringTokenizer stringTokenizer = new StringTokenizer(cfgFilesFlag,
+                                                                        ",");
+            while (stringTokenizer.hasMoreTokens()) {
+                cfgFiles.add(stringTokenizer.nextToken());
+            }
+        }
+        else {
+            final String[] cfgFilesProperty = glueGen.cfgFiles();
+            for (String cfgFileProperty : cfgFilesProperty) {
+                final File cfgFile = locateSource(packageName,
+                                                  cfgFileProperty);
+                cfgFiles.add(cfgFile.getAbsolutePath());
+            }
         }
 
-        final String filename = glueGen.header();
-        final File file = locateSource(packageName,
-                                       filename);
 
-        final String[]     includePathsProperty = glueGen.includePaths();
-        final List<String> includePaths         = new ArrayList<String>();
-        for (String include : includePathsProperty) {
-            final String[] paths = include.substring(2)
-                                          .split(getProperty("path.separator"));
-            includePaths.addAll(Arrays.asList(paths));
+        final File header;
+        if (overruleHeader) {
+            header = new File(headerFlag);
         }
+        else {
+            final String filename = glueGen.header();
+            header = locateSource(packageName,
+                                  filename);
+        }
+
+
+        final List<String> includePaths = new ArrayList<String>();
+        if (overruleIncludePaths) {
+            final StringTokenizer stringTokenizer = new StringTokenizer(includePathsFlag,
+                                                                        ",");
+            while (stringTokenizer.hasMoreTokens()) {
+                includePaths.add(stringTokenizer.nextToken());
+            }
+        }
+        else {
+            final String[] includePathsProperty = glueGen.includePaths();
+            for (String include : includePathsProperty) {
+                final String[] paths = include.substring(2)
+                                              .split(getProperty("path.separator"));
+                includePaths.addAll(Arrays.asList(paths));
+            }
+        }
+
+
+        final String outputRootDir;
+        if (overruleOutput) {
+            outputRootDir = outputFlag;
+        }
+        else {
+            outputRootDir = header.getParent();
+        }
+
 
         final boolean copyCPPOutput2Stderr = false;
-
-        new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(file.getPath())),
-                                             file.getPath(),
+        new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
+                                             header.getPath(),
                                              new AnnotationProcessorJavaStructEmitter(filer,
                                                                                       packageElement),
                                              includePaths,
                                              cfgFiles,
-                                             file.getParent(),
+                                             outputRootDir,
                                              copyCPPOutput2Stderr);
     }
 
