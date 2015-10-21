@@ -99,6 +99,7 @@
         <property name="junit.run.remote.jars" value="${junit.jar}${path.separator}${env.TARGET_ANT_HOME}/lib/ant.jar${path.separator}${env.TARGET_ANT_HOME}/lib/ant-junit.jar${path.separator}${env.TARGET_ANT_HOME}/lib/ant-junit4.jar${path.separator}${semver.jar}${path.separator}${gluegen.root}/make/lib/TestJarsInJar.jar${path.separator}${gluegen.root}/${rootrel.build}/gluegen-rt.jar${path.separator}${gluegen.root}/${rootrel.build}/gluegen.jar${path.separator}${build}/gluegen-test-util.jar${path.separator}${build_t}/gluegen-test.jar"/>
         <property name="junit.run.remote.apks" value="${gluegen.root}/${rootrel.build}/jogamp-android-launcher.apk${path.separator}${ant-junit-all.apk}${path.separator}${gluegen.root}/${rootrel.build}/gluegen-rt-android-${android.abi}.apk${path.separator}${build_t}/gluegen-test.apk${path.separator}${gluegen.root}/make/lib/TestJarsInJar.apk"/>
 
+        <property name="stub.includes.dir.abs" location="stub_includes" /> <!-- NOTE:  this MUST be absolute for gluegen annotation -->
         <property name="stub.includes.dir" value="stub_includes" /> <!-- NOTE:  this MUST be relative for FileSet -->
 
         <echo message="test.base.dir: ${test.base.dir} "/>
@@ -154,8 +155,7 @@
             <compilerarg value="-proc:only"/>
             <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
             <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
-            <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=
-            ${stub.includes.dir}/gluegen,${stub.includes.dir}/macosx,${stub.includes.dir}/unix,${stub.includes.dir}/windows"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>
             <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/generation/annotation"/>
             <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation" />
         </javac>
