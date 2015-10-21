@@ -13,7 +13,7 @@
            @CStruct(name = "Pixel",
                     header = "TestStruct02.h")})
 @GlueGen(header = "test1.h",
-         cfgFiles = "test1p2-gluegen.cfg")
+         cfgFiles = "test1-gluegen.cfg")
 package com.jogamp.gluegen.test.junit.generation.annotation;
 
 import com.jogamp.gluegen.annotation.CStruct;

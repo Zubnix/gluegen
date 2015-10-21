@@ -182,7 +182,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             System.err.println("GlueGen.locateSource.0: p " + packageName + ", r " + relativeName);
         }
         final FileObject h = filer.getResource(StandardLocation.SOURCE_PATH,
-                                               packageName,
+                                               "",
                                                relativeName);
         if (DEBUG) {
             System.err.println("GlueGen.locateSource.1: h " + h.toUri());
