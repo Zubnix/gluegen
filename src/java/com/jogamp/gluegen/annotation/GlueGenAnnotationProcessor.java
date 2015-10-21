@@ -43,7 +43,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -89,8 +88,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    //TODO see what we we can use from these
-    private Types    typeUtils;
     private Elements elementUtils;
     private Filer    filer;
     private Messager messager;
@@ -98,7 +95,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        typeUtils = processingEnv.getTypeUtils();
         elementUtils = processingEnv.getElementUtils();
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
