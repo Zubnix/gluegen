@@ -57,6 +57,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -161,7 +162,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
                                                              false);
         final boolean overruleOutput = outputFlag != null;
 
-
         final List<String> cfgFiles = new ArrayList<String>();
         if (overruleCfgFiles) {
             final StringTokenizer stringTokenizer = new StringTokenizer(cfgFilesFlag,
@@ -178,7 +178,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
                 cfgFiles.add(cfgFile.getAbsolutePath());
             }
         }
-
 
         final File header;
         if (overruleHeader) {
@@ -208,7 +207,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             }
         }
 
-
         final String outputRootDir;
         if (overruleOutput) {
             outputRootDir = outputFlag;
@@ -217,11 +215,11 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             outputRootDir = header.getParent();
         }
 
-
         final boolean copyCPPOutput2Stderr = false;
         new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
                                              header.getPath(),
-                                             new AnnotationProcessorJavaStructEmitter(filer,
+                                             new AnnotationProcessorJavaStructEmitter(overruleOutput,
+                                                                                      filer,
                                                                                       packageElement),
                                              includePaths,
                                              cfgFiles,
@@ -252,11 +250,16 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
     private static class AnnotationProcessorJavaStructEmitter extends JavaEmitter {
 
+        private final boolean        overruleOutput;
         private final Filer          filer;
         private final PackageElement packageElement;
 
-        public AnnotationProcessorJavaStructEmitter(Filer filer,
+        private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
+
+        public AnnotationProcessorJavaStructEmitter(final boolean overruleOutput,
+                                                    Filer filer,
                                                     PackageElement packageElement) {
+            this.overruleOutput = overruleOutput;
             this.filer = filer;
             this.packageElement = packageElement;
         }
@@ -264,15 +267,38 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         @Override
         protected PrintWriter openFile(final String filename,
                                        final String simpleClassName) throws IOException {
-            if (filename.endsWith(".java")) {
-                final JavaFileObject sourceFile = filer.createSourceFile(simpleClassName,
-                                                                         packageElement);
-                final Writer writer = sourceFile.openWriter();
-                return new PrintWriter(new BufferedWriter(writer));
-            }
-            else {
+            if (overruleOutput) {
                 return super.openFile(filename,
                                       simpleClassName);
+            }
+            else {
+                final Writer writer;
+                if (filename.endsWith(".java")) {
+                    final JavaFileObject sourceFile = filer.createSourceFile(simpleClassName,
+                                                                             packageElement);
+                    writer = sourceFile.openWriter();
+                }
+                else {
+                    final FileObject resourceFile = filer.createResource(StandardLocation.SOURCE_OUTPUT,
+                                                                         packageElement.getQualifiedName(),
+                                                                         new File(filename).getName(),
+                                                                         packageElement);
+                    writer = resourceFile.openWriter();
+                }
+
+                final PrintWriter printWriter = new PrintWriter(new BufferedWriter(writer));
+                writers.add(printWriter);
+
+                return printWriter;
+            }
+        }
+
+        @Override
+        public void endEmission() {
+            super.endEmission();
+            for (PrintWriter writer : writers) {
+                writer.flush();
+                writer.close();
             }
         }
     }

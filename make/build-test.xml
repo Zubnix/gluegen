@@ -155,7 +155,11 @@
             <compilerarg value="-proc:only"/>
             <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
             <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
+
+            <!-- compiler args for gluegen annotation so it plays nice with the our ant junit test environment -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output.com.jogamp.gluegen.test.junit.generation.annotation=${build_t.gen}"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>
+
             <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/generation/annotation"/>
             <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation" />
         </javac>
