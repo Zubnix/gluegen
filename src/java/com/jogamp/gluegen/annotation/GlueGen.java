@@ -29,6 +29,7 @@
 package com.jogamp.gluegen.annotation;
 
 
+import com.jogamp.gluegen.GlueEmitter;
 import com.jogamp.gluegen.JavaEmitter;
 
 import java.lang.annotation.ElementType;
@@ -109,8 +110,8 @@ public @interface GlueGen {
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.emitter.<package>=<fully qualified class name>}
      * compiler flag.
      * <p>
-     * Implementation note: The emitter must be compiled and found the java compiler before this annotation is processed.
+     * Implementation note: The emitter must be compiled and found the by java compiler before this annotation is processed.
      * @return
      */
-    Class<? extends JavaEmitter> emitter() default JavaEmitter.class;
+    Class<? extends GlueEmitter> emitter() default JavaEmitter.class;
 }
