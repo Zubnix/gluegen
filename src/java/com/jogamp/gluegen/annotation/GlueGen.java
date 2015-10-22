@@ -29,6 +29,8 @@
 package com.jogamp.gluegen.annotation;
 
 
+import com.jogamp.gluegen.JavaEmitter;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -98,4 +100,17 @@ public @interface GlueGen {
      * @return
      */
     String output() default "";
+
+    /**
+     * (optional) uses emitter as the emitter class which will be used by GlueGen to generate the glue code.
+     * The emitter class must implement the com.sun.gluegen.GlueEmitter interface.
+     * If this option is not specified, a com.sun.gluegen.JavaEmitter will be used by default.
+     * <p>
+     * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.emitter.<package>=<fully qualified class name>}
+     * compiler flag.
+     * <p>
+     * Implementation note: The emitter must be compiled and found the java compiler before this annotation is processed.
+     * @return
+     */
+    Class<? extends JavaEmitter> emitter() default JavaEmitter.class;
 }

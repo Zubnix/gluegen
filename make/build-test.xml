@@ -126,13 +126,13 @@
         <echo message=" build_t.gen     ${build_t.gen}"/>
 
         <!-- Javac of Annotation Processor dependencies - First -->
-        <javac destdir="${build_t.java}" 
+        <javac destdir="${build_t.java}"
                fork="yes"
                includeAntRuntime="false"
                memoryMaximumSize="${javac.memorymax}"
                encoding="UTF-8"
-               source="${target.sourcelevel}" 
-               target="${target.targetlevel}" 
+               source="${target.sourcelevel}"
+               target="${target.targetlevel}"
                bootclasspath="${target.rt.jar}"
                debug="${javacdebug}" debuglevel="${javacdebuglevel}">
             <classpath refid="junit.compile.classpath"/>
@@ -140,7 +140,7 @@
             <src path="${test.base.dir}/com/jogamp/junit/util"/>
         </javac>
 
-        <!-- Annotation Processor - Second -->
+        <!-- Annotation Processor - Second - trigger both (deprecated) cstruct processor and gluegen processor -->
         <mkdir dir="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation"/>
         <javac destdir="${build_t.java}" 
                fork="yes"
@@ -154,9 +154,66 @@
             <classpath refid="junit.compile.classpath"/>
             <compilerarg value="-proc:only"/>
             <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
+
+            <!-- compiler args for (deprecated) cstruct(s) annotation -->
             <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
 
             <!-- compiler args for gluegen annotation so it plays nice with the our ant junit test environment -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.cfgFiles.com.jogamp.gluegen.test.junit.generation.annotation=${test.junit.generation.dir}/annotation/test1-gluegen.cfg"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output.com.jogamp.gluegen.test.junit.generation.annotation=${build_t.gen}"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>
+
+            <src path="${test.base.dir}/com/jogamp/junit/util"/>
+            <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/generation/annotation"/>
+            <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation" />
+        </javac>
+
+        <antcall target="java.generate.copy2temp" inheritRefs="true" />
+
+        <!-- Javac Subsequent calls to trigger additional gluegen processor invocations with a different cfg -->
+        <javac destdir="${build_t.java}"
+               fork="yes"
+               includeAntRuntime="false"
+               memoryMaximumSize="${javac.memorymax}"
+               encoding="UTF-8"
+               source="${target.sourcelevel}"
+               target="${target.targetlevel}"
+               bootclasspath="${target.rt.jar}"
+               debug="${javacdebug}" debuglevel="${javacdebuglevel}">
+            <classpath refid="junit.compile.classpath"/>
+            <compilerarg value="-proc:only"/>
+            <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
+
+            <!-- compiler args for (deprecated) cstruct(s) annotation -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
+
+            <!-- compiler args for gluegen annotation so it plays nice with the our ant junit test environment -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.cfgFiles.com.jogamp.gluegen.test.junit.generation.annotation=${test.junit.generation.dir}/annotation/test1p1-gluegen.cfg"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output.com.jogamp.gluegen.test.junit.generation.annotation=${build_t.gen}"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>
+
+            <src path="${test.base.dir}/com/jogamp/gluegen/test/junit/generation/annotation"/>
+            <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation" />
+        </javac>
+        <javac destdir="${build_t.java}"
+               fork="yes"
+               includeAntRuntime="false"
+               memoryMaximumSize="${javac.memorymax}"
+               encoding="UTF-8"
+               source="${target.sourcelevel}"
+               target="${target.targetlevel}"
+               bootclasspath="${target.rt.jar}"
+               debug="${javacdebug}" debuglevel="${javacdebuglevel}">
+            <classpath refid="junit.compile.classpath"/>
+            <compilerarg value="-proc:only"/>
+            <!-- compilerarg value="-J-Djogamp.gluegen.annotation.debug"/ -->
+
+            <!-- compiler args for (deprecated) cstruct(s) annotation -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
+
+            <!-- compiler args for gluegen annotation so it plays nice with the our ant junit test environment -->
+            <compilerarg value="-J-Djogamp.gluegen.annotation.emitter.com.jogamp.gluegen.test.junit.generation.annotation=com.jogamp.gluegen.procaddress.ProcAddressEmitter"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.cfgFiles.com.jogamp.gluegen.test.junit.generation.annotation=${test.junit.generation.dir}/annotation/test1p2-gluegen.cfg"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.output.com.jogamp.gluegen.test.junit.generation.annotation=${build_t.gen}"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>
 
@@ -164,7 +221,7 @@
             <src path="${build_t.gen}/classes/com/jogamp/gluegen/test/junit/generation/annotation" />
         </javac>
 
-        <!-- Javac All - Third -->
+        <!-- Javac All - Last -->
         <javac destdir="${build_t.java}" 
                fork="yes"
                includeAntRuntime="false"

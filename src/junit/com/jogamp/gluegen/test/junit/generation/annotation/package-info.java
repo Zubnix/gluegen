@@ -12,8 +12,9 @@
                     header = "TestStruct01.h"),
            @CStruct(name = "Pixel",
                     header = "TestStruct02.h")})
-@GlueGen(header = "test1.h",
-         cfgFiles = "test1-gluegen.cfg")
+@GlueGen(header = "test1.h"
+         //cfg attribute is set in the ant test build xml.
+)
 package com.jogamp.gluegen.test.junit.generation.annotation;
 
 import com.jogamp.gluegen.annotation.CStruct;

@@ -43,6 +43,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -55,6 +56,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -78,6 +82,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
     private static final String CFG_FILES     = "jogamp.gluegen.annotation.cfgFiles.";
     private static final String HEADER        = "jogamp.gluegen.annotation.header.";
     private static final String OUTPUT        = "jogamp.gluegen.annotation.output.";
+    private static final String EMITTER       = "jogamp.gluegen.annotation.emitter.";
 
     static {
         Debug.initSingleton();
@@ -92,10 +97,12 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer    filer;
     private Messager messager;
+    private Types typeUtils;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
+        typeUtils = processingEnv.getTypeUtils();
         elementUtils = processingEnv.getElementUtils();
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
@@ -123,7 +130,8 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
                 process(packageElement,
                         glueGen);
             }
-            catch (IOException e) {
+            catch (Exception e) {
+                e.printStackTrace();
                 error(annotatedElement,
                       e.getMessage());
             }
@@ -142,7 +150,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
     }
 
     private void process(final PackageElement packageElement,
-                         final GlueGen glueGen) throws IOException {
+                         final GlueGen glueGen) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException {
         final String packageName = packageElement.getQualifiedName()
                                                  .toString();
 
@@ -161,6 +169,10 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         final String outputFlag = PropertyAccess.getProperty(OUTPUT + packageName,
                                                              false);
         final boolean overruleOutput = outputFlag != null;
+
+        final String emitterFlag = PropertyAccess.getProperty(EMITTER + packageName,
+                                                              false);
+        final boolean overruleEmitter = emitterFlag != null;
 
         final List<String> cfgFiles = new ArrayList<String>();
         if (overruleCfgFiles) {
@@ -215,12 +227,31 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             outputRootDir = header.getParent();
         }
 
+        final Class<? extends JavaEmitter> emitterClass;
+
+        if (overruleEmitter) {
+            Class<?> aClass = Class.forName(emitterFlag);
+            emitterClass = (Class<? extends JavaEmitter>) aClass;
+        }
+        else {
+            emitterClass = new JavaEmitter().getClass();
+        }
+
+        final JavaEmitter javaEmitter;
+        if (overruleOutput) {
+            javaEmitter = emitterClass.newInstance();
+        }
+        else {
+            javaEmitter = (JavaEmitter) Proxy.newProxyInstance(getClass().getClassLoader(),
+                                                               new Class[]{emitterClass},
+                                                               new AnnotationProcessorJavaStructEmitter(filer,
+                                                                                                        packageElement));
+        }
+
         final boolean copyCPPOutput2Stderr = false;
         new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
                                              header.getPath(),
-                                             new AnnotationProcessorJavaStructEmitter(overruleOutput,
-                                                                                      filer,
-                                                                                      packageElement),
+                                             javaEmitter,
                                              includePaths,
                                              cfgFiles,
                                              outputRootDir,
@@ -248,57 +279,65 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static class AnnotationProcessorJavaStructEmitter extends JavaEmitter {
+    private static class AnnotationProcessorJavaStructEmitter implements InvocationHandler {
 
-        private final boolean        overruleOutput;
         private final Filer          filer;
         private final PackageElement packageElement;
 
         private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
 
-        public AnnotationProcessorJavaStructEmitter(final boolean overruleOutput,
-                                                    Filer filer,
+        public AnnotationProcessorJavaStructEmitter(Filer filer,
                                                     PackageElement packageElement) {
-            this.overruleOutput = overruleOutput;
             this.filer = filer;
             this.packageElement = packageElement;
         }
 
-        @Override
-        protected PrintWriter openFile(final String filename,
-                                       final String simpleClassName) throws IOException {
-            if (overruleOutput) {
-                return super.openFile(filename,
-                                      simpleClassName);
+        private PrintWriter openFile(final String filename,
+                                     final String simpleClassName) throws IOException {
+            final Writer writer;
+            if (filename.endsWith(".java")) {
+                final JavaFileObject sourceFile = filer.createSourceFile(simpleClassName,
+                                                                         packageElement);
+                writer = sourceFile.openWriter();
             }
             else {
-                final Writer writer;
-                if (filename.endsWith(".java")) {
-                    final JavaFileObject sourceFile = filer.createSourceFile(simpleClassName,
-                                                                             packageElement);
-                    writer = sourceFile.openWriter();
-                }
-                else {
-                    final FileObject resourceFile = filer.createResource(StandardLocation.SOURCE_OUTPUT,
-                                                                         packageElement.getQualifiedName(),
-                                                                         new File(filename).getName(),
-                                                                         packageElement);
-                    writer = resourceFile.openWriter();
-                }
+                final FileObject resourceFile = filer.createResource(StandardLocation.SOURCE_OUTPUT,
+                                                                     packageElement.getQualifiedName(),
+                                                                     new File(filename).getName(),
+                                                                     packageElement);
+                writer = resourceFile.openWriter();
+            }
 
-                final PrintWriter printWriter = new PrintWriter(new BufferedWriter(writer));
-                writers.add(printWriter);
+            final PrintWriter printWriter = new PrintWriter(new BufferedWriter(writer));
+            writers.add(printWriter);
 
-                return printWriter;
+            return printWriter;
+        }
+
+        private void endEmission() {
+            for (PrintWriter writer : writers) {
+                writer.flush();
+                writer.close();
             }
         }
 
         @Override
-        public void endEmission() {
-            super.endEmission();
-            for (PrintWriter writer : writers) {
-                writer.flush();
-                writer.close();
+        public Object invoke(final Object proxy,
+                             final Method method,
+                             final Object[] args) throws Throwable {
+            if (method.getName()
+                      .equals("endEmission")) {
+                endEmission();
+                return null;
+            }
+            else if (method.getName()
+                           .equals("openFile")) {
+                return openFile((String) args[0],
+                                (String) args[1]);
+            }
+            else {
+                return method.invoke(proxy,
+                                     args);
             }
         }
     }
