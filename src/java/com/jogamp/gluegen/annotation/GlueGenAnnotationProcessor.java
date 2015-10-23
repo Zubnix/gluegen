@@ -30,8 +30,6 @@ package com.jogamp.gluegen.annotation;
 
 
 import com.jogamp.common.util.PropertyAccess;
-import com.jogamp.gluegen.GlueEmitter;
-import com.jogamp.gluegen.JavaEmitter;
 import jogamp.common.Debug;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -47,22 +45,14 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,11 +69,11 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
     private static final boolean DEBUG;
 
-    private static final String INCLUDE_PATHS = "jogamp.gluegen.annotation.includePaths.";
-    private static final String CFG_FILES     = "jogamp.gluegen.annotation.cfgFiles.";
-    private static final String HEADER        = "jogamp.gluegen.annotation.header.";
-    private static final String OUTPUT        = "jogamp.gluegen.annotation.output.";
-    private static final String EMITTER       = "jogamp.gluegen.annotation.emitter.";
+    public static final String INCLUDE_PATHS = "jogamp.gluegen.annotation.includePaths.";
+    public static final String CFG_FILES     = "jogamp.gluegen.annotation.cfgFiles.";
+    public static final String HEADER        = "jogamp.gluegen.annotation.header.";
+    public static final String OUTPUT        = "jogamp.gluegen.annotation.output.";
+    public static final String EMITTER       = "jogamp.gluegen.annotation.emitter.";
 
     static {
         Debug.initSingleton();
@@ -228,29 +218,26 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             outputRootDir = header.getParent();
         }
 
-        final Class<? extends GlueEmitter> emitterClass;
+        final Class<? extends AnnotationGlueEmitter> emitterClass;
+        final AnnotationGlueEmitter                  glueEmitter;
 
-        if (!overruleEmitter) {
+        if (overruleEmitter) {
             Class<?> aClass = Class.forName(emitterFlag);
-            emitterClass = (Class<? extends GlueEmitter>) aClass;
+            emitterClass = (Class<? extends AnnotationGlueEmitter>) aClass;
         }
         else {
-            emitterClass = JavaEmitter.class;
+            emitterClass = JavaAnnotationGlueEmitter.class;
         }
 
-        GlueEmitter javaEmitter = emitterClass.newInstance();
-        if (!overruleOutput) {
-            javaEmitter = (GlueEmitter) Proxy.newProxyInstance(getClass().getClassLoader(),
-                                                               new Class[]{GlueEmitter.class},
-                                                               new AnnotationProcessorJavaStructEmitter(javaEmitter,
-                                                                                                        filer,
-                                                                                                        packageElement));
-        }
+        glueEmitter = emitterClass.newInstance();
+        glueEmitter.setFiler(filer);
+        glueEmitter.setPackageElement(packageElement);
+        glueEmitter.setGlueGen(glueGen);
 
         final boolean copyCPPOutput2Stderr = false;
         new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
                                              header.getPath(),
-                                             javaEmitter,
+                                             glueEmitter,
                                              includePaths,
                                              cfgFiles,
                                              outputRootDir,
@@ -285,72 +272,6 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         }
         else {
             throw new FileNotFoundException(f + " not found.");
-        }
-    }
-
-    private static class AnnotationProcessorJavaStructEmitter implements InvocationHandler {
-
-        private final GlueEmitter    wrapped;
-        private final Filer          filer;
-        private final PackageElement packageElement;
-
-        private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
-
-        public AnnotationProcessorJavaStructEmitter(GlueEmitter wrapped,
-                                                    Filer filer,
-                                                    PackageElement packageElement) {
-            this.wrapped = wrapped;
-            this.filer = filer;
-            this.packageElement = packageElement;
-        }
-
-        private PrintWriter openFile(final String filename,
-                                     final String simpleClassName) throws IOException {
-            final Writer writer;
-            if (filename.endsWith(".java")) {
-                final JavaFileObject sourceFile = filer.createSourceFile(simpleClassName,
-                                                                         packageElement);
-                writer = sourceFile.openWriter();
-            }
-            else {
-                final FileObject resourceFile = filer.createResource(StandardLocation.SOURCE_OUTPUT,
-                                                                     packageElement.getQualifiedName(),
-                                                                     new File(filename).getName(),
-                                                                     packageElement);
-                writer = resourceFile.openWriter();
-            }
-
-            final PrintWriter printWriter = new PrintWriter(new BufferedWriter(writer));
-            writers.add(printWriter);
-
-            return printWriter;
-        }
-
-        private void endEmission() {
-            for (PrintWriter writer : writers) {
-                writer.flush();
-                writer.close();
-            }
-        }
-
-        @Override
-        public Object invoke(final Object proxy,
-                             final Method method,
-                             final Object[] args) throws Throwable {
-            if (method.getName()
-                      .equals("endEmission")) {
-                endEmission();
-                return null;
-            }
-            else if (method.getName()
-                           .equals("openFile")) {
-                return openFile((String) args[0],
-                                (String) args[1]);
-            }
-            else {
-                return method.invoke(wrapped,
-                                     args);
-            }
         }
     }
 }

@@ -212,7 +212,7 @@
             <compilerarg value="-J-Djogamp.gluegen.annotation.output=${build_t.gen}/classes"/>
 
             <!-- compiler args for gluegen annotation so it plays nice with the our ant junit test environment -->
-            <compilerarg value="-J-Djogamp.gluegen.annotation.emitter.com.jogamp.gluegen.test.junit.generation.annotation=com.jogamp.gluegen.procaddress.ProcAddressEmitter"/>
+            <compilerarg value="-J-Djogamp.gluegen.annotation.emitter.com.jogamp.gluegen.test.junit.generation.annotation=com.jogamp.gluegen.annotation.ProcAddressAnnotationGlueEmitter"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.cfgFiles.com.jogamp.gluegen.test.junit.generation.annotation=${test.junit.generation.dir}/annotation/test1p2-gluegen.cfg"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.output.com.jogamp.gluegen.test.junit.generation.annotation=${build_t.gen}"/>
             <compilerarg value="-J-Djogamp.gluegen.annotation.includePaths.com.jogamp.gluegen.test.junit.generation.annotation=${stub.includes.dir.abs}/gluegen,${stub.includes.dir.abs}/macosx,${stub.includes.dir.abs}/unix,${stub.includes.dir.abs}/windows"/>

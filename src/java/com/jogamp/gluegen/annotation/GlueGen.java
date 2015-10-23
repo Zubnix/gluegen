@@ -29,9 +29,6 @@
 package com.jogamp.gluegen.annotation;
 
 
-import com.jogamp.gluegen.GlueEmitter;
-import com.jogamp.gluegen.JavaEmitter;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -113,5 +110,5 @@ public @interface GlueGen {
      * Implementation note: The emitter must be compiled and found the by java compiler before this annotation is processed.
      * @return
      */
-    Class<? extends GlueEmitter> emitter() default JavaEmitter.class;
+    Class<? extends AnnotationGlueEmitter> emitter() default JavaAnnotationGlueEmitter.class;
 }
