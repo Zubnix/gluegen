@@ -1,16 +1,16 @@
 /**
  * Copyright 2015 JogAmp Community. All rights reserved.
- * <p>
+ * <p/>
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
- * <p>
+ * <p/>
  * 1. Redistributions of source code must retain the above copyright notice, this list of
  * conditions and the following disclaimer.
- * <p>
+ * <p/>
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list
  * of conditions and the following disclaimer in the documentation and/or other materials
  * provided with the distribution.
- * <p>
+ * <p/>
  * THIS SOFTWARE IS PROVIDED BY JogAmp Community ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JogAmp Community OR
@@ -20,7 +20,7 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * <p>
+ * <p/>
  * The views and conclusions contained in the software and documentation are those of the
  * authors and should not be interpreted as representing official policies, either expressed
  * or implied, of JogAmp Community.
@@ -48,9 +48,9 @@ public @interface GlueGen {
      * locate header files it encounters in #include directives. Unlike most C preprocessors, however, GlueGen has no
      * default include path, so it is typically necessary to supply at least one option in order
      * to handle any #include directives in the file being parsed.
-     * <p>
+     * <p/>
      * Include paths are resolved relative to the package this annotation is placed on.
-     * <p>
+     * <p/>
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.includePaths.<package>=<comma separated absolute include paths>}
      * compiler flag
      *
@@ -62,9 +62,9 @@ public @interface GlueGen {
      * (optional) adds cfgFile to the list of configuration files used to set up the chosen emitter. This is the means
      * by which a large number of options are passed in to the GlueGen tool and to the emitter in particular. Cfg files
      * must be in the same package as which this annotation was placed on.
-     * <p>
+     * <p/>
      * cfg files are resolved relative to the package this annotation is placed on.
-     * <p>
+     * <p/>
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.cfgFiles.<package>=<comma separated absolute cfg paths>}
      * compiler flag
      *
@@ -77,9 +77,9 @@ public @interface GlueGen {
      * Only one filename argument is supported. To cause multiple header files to be parsed, write a small .c file
      * #including the multiple headers and point GlueGen at the .c file.</p> file must be in the same package as which
      * this annotation was placed on.
-     * <p>
+     * <p/>
      * header file is resolved to the package this annotation is placed on.
-     * <p>
+     * <p/>
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.header.<package>=<absolute header path>}
      * compiler flag
      *
@@ -89,9 +89,9 @@ public @interface GlueGen {
 
     /**
      * (optional) specify the desired java source output. Default is the package on which this annotation is placed.
-     * <p>
+     * <p/>
      * Output is resolved relative to the package this annotation is placed on.
-     * <p>
+     * <p/>
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.output.<package>=<absolute output path>}
      * compiler flag.
      *
@@ -101,13 +101,14 @@ public @interface GlueGen {
 
     /**
      * (optional) uses emitter as the emitter class which will be used by GlueGen to generate the glue code.
-     * The emitter class must implement the com.sun.gluegen.GlueEmitter interface.
-     * If this option is not specified, a com.sun.gluegen.JavaEmitter will be used by default.
-     * <p>
+     * The emitter class must implement {@link AnnotationGlueEmitter}.
+     * If this option is not specified, {@link JavaAnnotationGlueEmitter} will be used by default.
+     * <p/>
      * Can be overruled by passing the {@code -J-Djogamp.gluegen.annotation.emitter.<package>=<fully qualified class name>}
      * compiler flag.
-     * <p>
+     * <p/>
      * Implementation note: The emitter must be compiled and found the by java compiler before this annotation is processed.
+     *
      * @return
      */
     Class<? extends AnnotationGlueEmitter> emitter() default JavaAnnotationGlueEmitter.class;
