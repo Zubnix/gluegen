@@ -84,6 +84,7 @@ import java.util.Set;
  */
 @SupportedAnnotationTypes(value = {"com.jogamp.gluegen.annotation.CStruct", "com.jogamp.gluegen.annotation.CStructs"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
+@Deprecated
 public class CStructAnnotationProcessor extends AbstractProcessor {
     private static final String DEFAULT = "_default_";
     static final boolean DEBUG;
