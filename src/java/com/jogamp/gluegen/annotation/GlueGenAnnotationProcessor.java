@@ -30,6 +30,7 @@ package com.jogamp.gluegen.annotation;
 
 
 import com.jogamp.common.util.PropertyAccess;
+import com.jogamp.gluegen.GlueEmitter;
 import com.jogamp.gluegen.JavaEmitter;
 import jogamp.common.Debug;
 
@@ -97,7 +98,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer    filer;
     private Messager messager;
-    private Types typeUtils;
+    private Types    typeUtils;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -227,24 +228,22 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             outputRootDir = header.getParent();
         }
 
-        final Class<? extends JavaEmitter> emitterClass;
+        final Class<? extends GlueEmitter> emitterClass;
 
         if (overruleEmitter) {
             Class<?> aClass = Class.forName(emitterFlag);
-            emitterClass = (Class<? extends JavaEmitter>) aClass;
+            emitterClass = (Class<? extends GlueEmitter>) aClass;
         }
         else {
-            emitterClass = new JavaEmitter().getClass();
+            emitterClass = JavaEmitter.class;
         }
 
-        final JavaEmitter javaEmitter;
-        if (overruleOutput) {
-            javaEmitter = emitterClass.newInstance();
-        }
-        else {
-            javaEmitter = (JavaEmitter) Proxy.newProxyInstance(getClass().getClassLoader(),
-                                                               new Class[]{emitterClass},
-                                                               new AnnotationProcessorJavaStructEmitter(filer,
+        GlueEmitter javaEmitter = emitterClass.newInstance();
+        if (!overruleOutput) {
+            javaEmitter = (GlueEmitter) Proxy.newProxyInstance(getClass().getClassLoader(),
+                                                               new Class[]{GlueEmitter.class},
+                                                               new AnnotationProcessorJavaStructEmitter(javaEmitter,
+                                                                                                        filer,
                                                                                                         packageElement));
         }
 
@@ -263,9 +262,19 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         if (DEBUG) {
             System.err.println("GlueGen.locateSource.0: p " + packageName + ", r " + relativeName);
         }
-        final FileObject h = filer.getResource(StandardLocation.SOURCE_PATH,
-                                               "",
-                                               relativeName);
+
+
+        FileObject h;
+        try {
+            h = filer.getResource(StandardLocation.SOURCE_PATH,
+                                  packageName,
+                                  relativeName);
+        }
+        catch (IOException e) {
+            h = filer.getResource(StandardLocation.SOURCE_PATH,
+                                  "",
+                                  relativeName);
+        }
         if (DEBUG) {
             System.err.println("GlueGen.locateSource.1: h " + h.toUri());
         }
@@ -281,13 +290,16 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
     private static class AnnotationProcessorJavaStructEmitter implements InvocationHandler {
 
+        private final GlueEmitter    wrapped;
         private final Filer          filer;
         private final PackageElement packageElement;
 
         private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
 
-        public AnnotationProcessorJavaStructEmitter(Filer filer,
+        public AnnotationProcessorJavaStructEmitter(GlueEmitter wrapped,
+                                                    Filer filer,
                                                     PackageElement packageElement) {
+            this.wrapped = wrapped;
             this.filer = filer;
             this.packageElement = packageElement;
         }
@@ -336,7 +348,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
                                 (String) args[1]);
             }
             else {
-                return method.invoke(proxy,
+                return method.invoke(wrapped,
                                      args);
             }
         }
