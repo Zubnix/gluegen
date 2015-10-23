@@ -4,6 +4,7 @@ import com.jogamp.common.util.PropertyAccess;
 import com.jogamp.gluegen.procaddress.ProcAddressEmitter;
 
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -16,10 +17,9 @@ import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class ProcAddressAnnotationGlueEmitter extends ProcAddressEmitter implements AnnotationGlueEmitter {
+public class ProcAddressAnnotationGlueEmitter extends ProcAddressEmitter implements AnnotationGlueEmitter {
     private Filer          filer;
     private PackageElement packageElement;
-    private GlueGen        glueGen;
 
     private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
 
@@ -30,14 +30,15 @@ public final class ProcAddressAnnotationGlueEmitter extends ProcAddressEmitter i
 
     @Override
     public void setGlueGen(final GlueGen glueGen) {
-        this.glueGen = glueGen;
+        //not using
     }
 
     @Override
-    public void setFiler(final Filer filer) {
-        this.filer = filer;
+    public void setProcessingEnvironment(final ProcessingEnvironment processingEnv) {
+        this.filer = processingEnv.getFiler();
     }
 
+    @Override
     protected PrintWriter openFile(final String filename,
                                    final String simpleClassName) throws IOException {
         //if the output was set through a compiler flag, we don't use the filer to output our source files
@@ -69,6 +70,7 @@ public final class ProcAddressAnnotationGlueEmitter extends ProcAddressEmitter i
         return printWriter;
     }
 
+    @Override
     public void endEmission() {
         super.endEmission();
         for (PrintWriter writer : writers) {

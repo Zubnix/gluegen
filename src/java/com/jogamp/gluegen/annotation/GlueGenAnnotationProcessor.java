@@ -41,6 +41,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -57,8 +59,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import static java.lang.System.getProperty;
 
 //TODO unit tests
 
@@ -85,13 +85,15 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private Elements elementUtils;
-    private Filer    filer;
-    private Messager messager;
-    private Types    typeUtils;
+    private Elements              elementUtils;
+    private Filer                 filer;
+    private Messager              messager;
+    private Types                 typeUtils;
+    private ProcessingEnvironment processingEnv;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
+        this.processingEnv = processingEnv;
         super.init(processingEnv);
         typeUtils = processingEnv.getTypeUtils();
         elementUtils = processingEnv.getElementUtils();
@@ -142,29 +144,146 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
     private void process(final PackageElement packageElement,
                          final GlueGen glueGen) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException {
+        //get package context
         final String packageName = packageElement.getQualifiedName()
                                                  .toString();
 
+        //include paths
         final String includePathsFlag = PropertyAccess.getProperty(INCLUDE_PATHS + packageName,
                                                                    false);
         final boolean overruleIncludePaths = includePathsFlag != null;
+        final List<String> includePaths = getIncludePaths(glueGen,
+                                                          includePathsFlag,
+                                                          overruleIncludePaths);
 
+        //cfg files
         final String cfgFilesFlag = PropertyAccess.getProperty(CFG_FILES + packageName,
                                                                false);
         final boolean overruleCfgFiles = cfgFilesFlag != null;
+        final List<String> cfgFiles = getCfgFiles(glueGen,
+                                                  packageName,
+                                                  cfgFilesFlag,
+                                                  overruleCfgFiles);
 
+        //header
         final String headerFlag = PropertyAccess.getProperty(HEADER + packageName,
                                                              false);
         final boolean overruleHeader = headerFlag != null;
+        final File header = getHeader(glueGen,
+                                      packageName,
+                                      headerFlag,
+                                      overruleHeader);
 
+        //output
         final String outputFlag = PropertyAccess.getProperty(OUTPUT + packageName,
                                                              false);
         final boolean overruleOutput = outputFlag != null;
+        final String outputRootDir = getOutputRootDir(outputFlag,
+                                                      overruleOutput,
+                                                      header);
 
+        //emitter
         final String emitterFlag = PropertyAccess.getProperty(EMITTER + packageName,
                                                               false);
         final boolean overruleEmitter = emitterFlag != null;
+        final Class<? extends AnnotationGlueEmitter> emitterClass = getEmitterClass(glueGen,
+                                                                                    emitterFlag,
+                                                                                    overruleEmitter);
+        final AnnotationGlueEmitter glueEmitter = emitterClass.newInstance();
+        glueEmitter.setProcessingEnvironment(processingEnv);
+        glueEmitter.setPackageElement(packageElement);
+        glueEmitter.setGlueGen(glueGen);
 
+        //invoke gluegen
+        final boolean copyCPPOutput2Stderr = false;
+        new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
+                                             header.getPath(),
+                                             glueEmitter,
+                                             includePaths,
+                                             cfgFiles,
+                                             outputRootDir,
+                                             copyCPPOutput2Stderr);
+    }
+
+    private Class<? extends AnnotationGlueEmitter> getEmitterClass(final GlueGen glueGen,
+                                                                   final String emitterFlag,
+                                                                   final boolean overruleEmitter) throws ClassNotFoundException {
+        String className;
+        if (overruleEmitter) {
+            className = emitterFlag;
+        }
+        else {
+            try {
+                //Remember we're still in the compilation phase so we ask for the name to make sure the class it
+                //actually loaded, (see comment in catch block). A class needs to be loaded in order to instantiate objects
+                //from it.
+                className = glueGen.emitter()
+                                   .getName();
+
+            }
+            catch (MirroredTypeException e) {
+                //Thrown when the emitter() class is not yet loaded, so we can not ask for it's name (nor instantiate objects from it).
+                //Luckily the exception carries the class' meta-reflection object and we can use that to find it's name and load the class.
+                DeclaredType classTypeMirror = (DeclaredType) e.getTypeMirror();
+                TypeElement classTypeElement = (TypeElement) classTypeMirror.asElement();
+                className = classTypeElement.getQualifiedName()
+                                            .toString();
+            }
+        }
+        return (Class<? extends AnnotationGlueEmitter>) Class.forName(className);
+    }
+
+    private String getOutputRootDir(final String outputFlag,
+                                    final boolean overruleOutput,
+                                    final File header) {
+        final String outputRootDir;
+        if (overruleOutput) {
+            outputRootDir = outputFlag;
+        }
+        else {
+            outputRootDir = header.getParent();
+        }
+        return outputRootDir;
+    }
+
+    private List<String> getIncludePaths(final GlueGen glueGen,
+                                         final String includePathsFlag,
+                                         final boolean overruleIncludePaths) {
+        final List<String> includePaths = new ArrayList<String>();
+        if (overruleIncludePaths) {
+            final StringTokenizer stringTokenizer = new StringTokenizer(includePathsFlag,
+                                                                        ",");
+            while (stringTokenizer.hasMoreTokens()) {
+                includePaths.add(stringTokenizer.nextToken());
+            }
+        }
+        else {
+            final String[] includePathsProperty = glueGen.includePaths();
+            includePaths.addAll(Arrays.asList(includePathsProperty));
+        }
+        return includePaths;
+    }
+
+    private File getHeader(final GlueGen glueGen,
+                           final String packageName,
+                           final String headerFlag,
+                           final boolean overruleHeader) throws IOException {
+        final File header;
+        if (overruleHeader) {
+            header = new File(headerFlag);
+        }
+        else {
+            final String filename = glueGen.header();
+            header = locateSource(packageName,
+                                  filename);
+        }
+        return header;
+    }
+
+    private List<String> getCfgFiles(final GlueGen glueGen,
+                                     final String packageName,
+                                     final String cfgFilesFlag,
+                                     final boolean overruleCfgFiles) throws IOException {
         final List<String> cfgFiles = new ArrayList<String>();
         if (overruleCfgFiles) {
             final StringTokenizer stringTokenizer = new StringTokenizer(cfgFilesFlag,
@@ -181,68 +300,9 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
                 cfgFiles.add(cfgFile.getAbsolutePath());
             }
         }
-
-        final File header;
-        if (overruleHeader) {
-            header = new File(headerFlag);
-        }
-        else {
-            final String filename = glueGen.header();
-            header = locateSource(packageName,
-                                  filename);
-        }
-
-
-        final List<String> includePaths = new ArrayList<String>();
-        if (overruleIncludePaths) {
-            final StringTokenizer stringTokenizer = new StringTokenizer(includePathsFlag,
-                                                                        ",");
-            while (stringTokenizer.hasMoreTokens()) {
-                includePaths.add(stringTokenizer.nextToken());
-            }
-        }
-        else {
-            final String[] includePathsProperty = glueGen.includePaths();
-            for (String include : includePathsProperty) {
-                final String[] paths = include.substring(2)
-                                              .split(getProperty("path.separator"));
-                includePaths.addAll(Arrays.asList(paths));
-            }
-        }
-
-        final String outputRootDir;
-        if (overruleOutput) {
-            outputRootDir = outputFlag;
-        }
-        else {
-            outputRootDir = header.getParent();
-        }
-
-        final Class<? extends AnnotationGlueEmitter> emitterClass;
-        final AnnotationGlueEmitter                  glueEmitter;
-
-        if (overruleEmitter) {
-            Class<?> aClass = Class.forName(emitterFlag);
-            emitterClass = (Class<? extends AnnotationGlueEmitter>) aClass;
-        }
-        else {
-            emitterClass = JavaAnnotationGlueEmitter.class;
-        }
-
-        glueEmitter = emitterClass.newInstance();
-        glueEmitter.setFiler(filer);
-        glueEmitter.setPackageElement(packageElement);
-        glueEmitter.setGlueGen(glueGen);
-
-        final boolean copyCPPOutput2Stderr = false;
-        new com.jogamp.gluegen.GlueGen().run(new BufferedReader(new FileReader(header.getPath())),
-                                             header.getPath(),
-                                             glueEmitter,
-                                             includePaths,
-                                             cfgFiles,
-                                             outputRootDir,
-                                             copyCPPOutput2Stderr);
+        return cfgFiles;
     }
+
 
     private File locateSource(final String packageName,
                               final String relativeName) throws IOException {
@@ -250,14 +310,15 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
             System.err.println("GlueGen.locateSource.0: p " + packageName + ", r " + relativeName);
         }
 
-
         FileObject h;
         try {
+            //some build systems compiler invocation starts from the root of the package...
             h = filer.getResource(StandardLocation.SOURCE_PATH,
                                   packageName,
                                   relativeName);
         }
         catch (IOException e) {
+            //...and some don't. So we have to look again with an empty package argument.
             h = filer.getResource(StandardLocation.SOURCE_PATH,
                                   "",
                                   relativeName);

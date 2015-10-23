@@ -4,6 +4,7 @@ import com.jogamp.common.util.PropertyAccess;
 import com.jogamp.gluegen.JavaEmitter;
 
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.PackageElement;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -17,17 +18,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public final class JavaAnnotationGlueEmitter extends JavaEmitter implements AnnotationGlueEmitter {
+public class JavaAnnotationGlueEmitter extends JavaEmitter implements AnnotationGlueEmitter {
 
     private Filer          filer;
     private PackageElement packageElement;
-    private GlueGen        glueGen;
 
     private final Set<PrintWriter> writers = new HashSet<PrintWriter>();
 
     @Override
-    public void setFiler(final Filer filer) {
-        this.filer = filer;
+    public void setProcessingEnvironment(final ProcessingEnvironment processingEnv) {
+        this.filer = processingEnv.getFiler();
     }
 
     @Override
@@ -37,8 +37,7 @@ public final class JavaAnnotationGlueEmitter extends JavaEmitter implements Anno
 
     @Override
     public void setGlueGen(final GlueGen glueGen) {
-
-        this.glueGen = glueGen;
+        //not using
     }
 
     protected PrintWriter openFile(final String filename,
