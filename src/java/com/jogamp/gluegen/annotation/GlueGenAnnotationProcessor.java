@@ -230,7 +230,7 @@ public class GlueGenAnnotationProcessor extends AbstractProcessor {
 
         final Class<? extends GlueEmitter> emitterClass;
 
-        if (overruleEmitter) {
+        if (!overruleEmitter) {
             Class<?> aClass = Class.forName(emitterFlag);
             emitterClass = (Class<? extends GlueEmitter>) aClass;
         }
